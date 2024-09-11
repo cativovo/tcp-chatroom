@@ -40,7 +40,7 @@ func (s *Server) ListenAndServe(addr string) error {
 		log.Printf("%s connected", conn.RemoteAddr())
 
 		c := newClient(conn, s.commandChan)
-		c.sendMessage("")
+		s.listRooms(c)
 		go c.readInput()
 	}
 }
@@ -53,17 +53,17 @@ func (s *Server) runCommand() {
 			s.join(cmd.client, cmd.args)
 		case CmdSendMessage:
 			s.sendMessage(cmd.client, cmd.args)
+		case CmdListRooms:
+			s.listRooms(cmd.client)
 		default:
-			fmt.Fprintln(cmd.client.conn, "eyyyy")
+			cmd.client.sendMessage("eyyy")
 		}
-
-		cmd.client.sendMessage("")
 	}
 }
 
 func (s *Server) join(c *client, args []string) {
 	if len(args) == 0 {
-		fmt.Fprintln(c.conn, "room name is required")
+		c.sendMessage("room name is required")
 		return
 	}
 
@@ -82,19 +82,34 @@ func (s *Server) join(c *client, args []string) {
 	s.rooms[roomName] = r
 
 	r.broadCast(c, fmt.Sprintf("%s joined the room", c.username))
-	c.sendMessage(fmt.Sprintf("welcome to %s\n", roomName))
+	c.sendMessage(fmt.Sprintf("welcome to %s", roomName))
 }
 
 func (s *Server) sendMessage(c *client, args []string) {
 	if len(args) == 0 {
-		c.sendMessage("message is required\n")
+		c.sendMessage("message is required")
 		return
 	}
 
 	if c.room == nil {
-		c.sendMessage("join a room before you can message\n")
+		c.sendMessage("join a room before you can message")
 		return
 	}
 
 	c.room.broadCast(c, fmt.Sprintf("%s says: %s", c.username, strings.Join(args, " ")))
+	fmt.Fprint(c.conn, "> ")
+}
+
+func (s *Server) listRooms(c *client) {
+	if len(s.rooms) == 0 {
+		c.sendMessage("no rooms found, create one using /join ROOM_NAME")
+		return
+	}
+
+	var rooms strings.Builder
+	for room := range s.rooms {
+		rooms.WriteString(fmt.Sprintf("  - %s\n", room))
+	}
+
+	c.sendMessage(fmt.Sprintf("available rooms:\n%s", strings.TrimSuffix(rooms.String(), "\n")))
 }

@@ -44,5 +44,5 @@ func (c *client) joinRoom(r *room) {
 }
 
 func (c *client) sendMessage(m string) {
-	fmt.Fprintf(c.conn, "> %s", m)
+	fmt.Fprintf(c.conn, "> %s\n> ", m)
 }
