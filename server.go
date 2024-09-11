@@ -55,6 +55,8 @@ func (s *Server) runCommand() {
 			s.sendMessage(cmd.client, cmd.args)
 		case CmdListRooms:
 			s.listRooms(cmd.client)
+		case CmdSetUsername:
+			s.setUsername(cmd.client, cmd.args)
 		default:
 			cmd.client.sendMessage("eyyy")
 		}
@@ -81,7 +83,7 @@ func (s *Server) join(c *client, args []string) {
 
 	s.rooms[roomName] = r
 
-	r.broadCast(c, fmt.Sprintf("%s joined the room", c.username))
+	r.broadCast(c, fmt.Sprintf("(%s) joined the room", c.username))
 	c.sendMessage(fmt.Sprintf("welcome to %s", roomName))
 }
 
@@ -96,7 +98,7 @@ func (s *Server) sendMessage(c *client, args []string) {
 		return
 	}
 
-	c.room.broadCast(c, fmt.Sprintf("%s says: %s", c.username, strings.Join(args, " ")))
+	c.room.broadCast(c, fmt.Sprintf("(%s) says: %s", c.username, strings.Join(args, " ")))
 	fmt.Fprint(c.conn, "> ")
 }
 
@@ -112,4 +114,16 @@ func (s *Server) listRooms(c *client) {
 	}
 
 	c.sendMessage(fmt.Sprintf("available rooms:\n%s", strings.TrimSuffix(rooms.String(), "\n")))
+}
+
+func (s *Server) setUsername(c *client, args []string) {
+	if len(args) == 0 || args[0] == "" {
+		c.sendMessage("username cannot be empty")
+	}
+
+	oldUsername := c.username
+	c.username = args[0]
+
+	c.sendMessage(fmt.Sprintf("changed username from (%s) to (%s)", oldUsername, c.username))
+	c.room.broadCast(c, fmt.Sprintf("(%s) changed their username to (%s)", oldUsername, c.username))
 }
