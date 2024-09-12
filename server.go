@@ -55,10 +55,12 @@ func (s *Server) runCommand() {
 			s.sendMessage(cmd.client, cmd.args)
 		case CmdListRooms:
 			s.listRooms(cmd.client)
+		case CmdListMembers:
+			s.listMembers(cmd.client)
 		case CmdSetUsername:
 			s.setUsername(cmd.client, cmd.args)
 		default:
-			cmd.client.sendMessage("eyyy")
+			cmd.client.sendMessage(fmt.Sprintf("invalid command %s", cmd.commandType))
 		}
 	}
 }
@@ -118,6 +120,14 @@ func (s *Server) listRooms(c *client) {
 	}
 
 	c.sendMessage(fmt.Sprintf("available rooms:\n%s", strings.TrimSuffix(rooms.String(), "\n")))
+}
+
+func (s *Server) listMembers(c *client) {
+	if c.room == nil {
+		c.sendMessage("must be inside of a room to list the members")
+		return
+	}
+	c.sendMessage(fmt.Sprintf("members:\n  - %s", strings.Join(c.room.listMembers(), "\n  - ")))
 }
 
 func (s *Server) setUsername(c *client, args []string) {
