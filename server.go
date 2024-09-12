@@ -37,12 +37,16 @@ func (s *Server) ListenAndServe(addr string) error {
 			continue
 		}
 
-		log.Printf("%s connected", conn.RemoteAddr())
-
-		c := newClient(conn, s.commandChan)
-		s.listRooms(c)
-		go c.readInput()
+		go s.handleConnection(conn)
 	}
+}
+
+func (s *Server) handleConnection(conn net.Conn) {
+	log.Printf("%s connected", conn.RemoteAddr())
+
+	c := newClient(conn, s.commandChan)
+	s.listRooms(c)
+	c.readInput()
 }
 
 func (s *Server) runCommand() {
