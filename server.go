@@ -133,13 +133,17 @@ func (s *Server) listMembers(c *client) {
 func (s *Server) setUsername(c *client, args []string) {
 	if len(args) == 0 || args[0] == "" {
 		c.sendMessage("username cannot be empty")
+		return
 	}
 
 	oldUsername := c.username
 	c.username = args[0]
 
 	c.sendMessage(fmt.Sprintf("changed username from (%s) to (%s)", oldUsername, c.username))
-	c.room.broadCast(c, fmt.Sprintf("(%s) changed their username to (%s)", oldUsername, c.username))
+
+	if c.room != nil {
+		c.room.broadCast(c, fmt.Sprintf("(%s) changed their username to (%s)", oldUsername, c.username))
+	}
 }
 
 func (s *Server) quitRoom(c *client) {
