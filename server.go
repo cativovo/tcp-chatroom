@@ -59,6 +59,8 @@ func (s *Server) runCommand() {
 			s.listMembers(cmd.client)
 		case CmdSetUsername:
 			s.setUsername(cmd.client, cmd.args)
+		case CmdQuit:
+			s.quit(cmd.client)
 		default:
 			cmd.client.sendMessage(fmt.Sprintf("invalid command %s", cmd.commandType))
 		}
@@ -144,6 +146,12 @@ func (s *Server) setUsername(c *client, args []string) {
 	if c.room != nil {
 		c.room.broadCast(c, fmt.Sprintf("(%s) changed their username to (%s)", oldUsername, c.username))
 	}
+}
+
+func (s *Server) quit(c *client) {
+	s.quitRoom(c)
+	c.sendMessage("it was nice having you here, take care!")
+	c.conn.Close()
 }
 
 func (s *Server) quitRoom(c *client) {
