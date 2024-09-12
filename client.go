@@ -43,6 +43,10 @@ func (c *client) joinRoom(r *room) {
 	c.room = r
 }
 
+func (c *client) quitRoom() {
+	c.room = nil
+}
+
 func (c *client) sendMessage(m string) {
 	fmt.Fprintf(c.conn, "> %s\n> ", m)
 }

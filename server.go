@@ -78,6 +78,10 @@ func (s *Server) join(c *client, args []string) {
 		}
 	}
 
+	if c.room != nil {
+		s.quitRoom(c)
+	}
+
 	r.addMember(c)
 	c.joinRoom(r)
 
@@ -126,4 +130,11 @@ func (s *Server) setUsername(c *client, args []string) {
 
 	c.sendMessage(fmt.Sprintf("changed username from (%s) to (%s)", oldUsername, c.username))
 	c.room.broadCast(c, fmt.Sprintf("(%s) changed their username to (%s)", oldUsername, c.username))
+}
+
+func (s *Server) quitRoom(c *client) {
+	delete(s.rooms[c.room.name].members, c.conn.RemoteAddr())
+
+	c.room.broadCast(c, fmt.Sprintf("(%s) left the room", c.username))
+	c.quitRoom()
 }
